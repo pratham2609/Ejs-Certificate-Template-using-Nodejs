@@ -1,32 +1,42 @@
-var config = require('./config/mail');
-var google = require('./config/google');
-var nodemailer = require('nodemailer');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
-var send = function (args) {
-  let transporter = nodemailer.createTransport({
-    'service': 'gmail',
-    'auth': {
-        'type': 'OAuth2',
-        'user': google.client_email,
-        'serviceClient': google.client_id,
-        'privateKey': google.private_key
-    }
-  });
-  transporter.on('token', token => console.log(token));
+const message =
+  'We thank you wholeheartedly for the contribution made towards Codewave Go Green. Please find the <br> receipt enclosed. We will be sending an 80G certificate in the month of Mar/April 2023. <br><br> Best regards,Codewave';
 
-  let message = {
-    'from': `"${config.serverFromName}" <${config.serverFromMail}>`,
-    'to': args.to,
-    'subject': args.subject,
-    'text': args.text,
-    'html': `<p>${args.text}</p>`
-  };
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.MAIL_ID,
+    pass: process.env.MAIL_PASSWORD,
+  },
+  debug: true,
+});
 
-  transporter.sendMail(message, (err, info) => {
-    if (err) {
-      console.log('Mail couldn\'t be sent because: ' + err);
-    } else {
-      console.log('Mail sent');
-    }
-  });
+const sendInvoiceMail = async (email, attachmentUrl) => {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.MAIL_ID,
+      to: email,
+      subject: 'Certificate of Appreciation',
+      html: message,
+      attachments: [
+        {
+          filename: 'Certificate.pdf',
+          path: attachmentUrl,
+          encoding: 'base64', // Add encoding property if needed
+          contentType: 'application/pdf',
+        },
+      ],
+    });
+    console.log(`Invoice Mail sent to ${email}`, info);
+    return true;
+  } catch (err) {
+    console.error('Error sending invoice mail:', err);
+    return false;
+  }
 };
+
+module.exports = sendInvoiceMail;

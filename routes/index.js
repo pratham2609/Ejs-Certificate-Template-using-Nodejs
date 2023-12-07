@@ -10,13 +10,12 @@ const postData = async (req, res) => {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const jsonData = xlsx.utils.sheet_to_json(sheet);
-    console.log(jsonData)
     try {
         jsonData.map(async (data) => {
             const newExcelData = new excelSchema(data);
             await newExcelData.save();
         })
-        res.json({ message: 'Excel data saved successfully!' });
+        res.send('<h1>Excel data saved successfully!</h1>');
     } catch (error) {
         res.status(500).send('Error saving data to MongoDB.');
     }
